@@ -25,13 +25,13 @@ exit(0);
 
 int main(int argc, char** argv)
 {
-char str[80]
-signal(SIGALRM, myhandle);
-while(1){
-alarm(5);
+char str[80];
+   signal(SIGALRM, myhandle);
+   while(1){
+   alarm(5);
 printf("> ");
-fgets(str, 80 stdin);
-printf("%s\n", str)
+fgets(str, 80, stdin);
+printf("%s\n", str);
 
 
 
@@ -40,4 +40,3 @@ printf("%s\n", str)
 
 	return 0;
 }
-
