@@ -27,7 +27,7 @@ int mode = 0;
  * 
  */								
 void myhandle(int mysignal){			//get ID ps -aux | grep "filename" ( 2 terminal notwending)
-printf("myhandle with signal d%\n", mysignal); //kill -15 ID
+printf("Sie sind im debug modus!\n"); //kill -15 ID springt in den Debug modus
 mode++;
 }
 void myhandlequit(int myquitsignal){	     //kill -3 ID   //kill -9 ID terminiert ohne meldung
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 	int mypipe[2];
 	int ret;
 	pid_t cpid;
-	pid_t dpid;	
+	//pid_t dpid; wird das gebraucht?	
 	char buf[20];
 	ret = pipe(mypipe);
 	char input[5];
@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 	struct tm *loctime;
 	curtime = time(NULL);
 	loctime = localtime(&curtime);
-	//int mode = 0;
+	//int mode = 0; //Global für kill funktion
 	signal(SIGQUIT, myhandlequit);
 	signal(SIGTERM, myhandle);
 	if( ret == -1){
@@ -65,9 +65,9 @@ int main(int argc, char** argv) {
 	printf("Child %d, my parent is %d \n",getpid(), getppid());
 	read(mypipe[0], buf,4);
 	if(buf[0] == 'p'){
-	dpid = fork();
-	if(dpid == -1){perror("fork"); exit(EXIT_FAILURE);}		  //ps -aux | grep "filename"
-	if(dpid == 0){ //child
+	cpid = fork();
+	if(cpid == -1){perror("fork"); exit(EXIT_FAILURE);}		  //ps -aux | grep "filename"
+	if(cpid == 0){ //child
 	printf("ZWEI Child %d, my parent is %d \n",getpid(), getppid());  //Ka ob es so ansatzweise stimmt bzw notwendig ist?
 	//printf("\nEs wurden %i sekunden gezaehlt!\n",steos);		//output Zähler (glaub ich nicht gefragt?)		
 	//printf("Es sind: %d sekunden vergangen seit 01.01.1970!\n",(int)time(NULL));
