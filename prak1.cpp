@@ -23,15 +23,27 @@ int steps = 0;
 class Prozess{
 public:
 Prozess();
-Prozess(list<string> str);
+Prozess(list<string> str, int startTime, int ppid, int pid);
 list<string> anweisungen;
+int pid;
+int ppid;
+int priority;
+int value;
+int startTime;
+int timeUsed;
 
 };
 Prozess::Prozess(){
-
+this->priority = 0;
 }
-Prozess::Prozess(list<string>str){
- this->anweisungen = str;
+Prozess::Prozess(list<string>str,int startTime, int ppid, int pid){
+this->priority = 0; 
+this->value = 0;
+this->timeUsed = 0;
+this->ppid = ppid;
+this->pid = pid;
+this->anweisungen = str;
+this->startTime = startTime;
 }
 								
 void myhandle(int mysignal){
@@ -47,7 +59,8 @@ int main(int argc, char** argv) {
 	int mypipe[2];
 	int pipename;
 	int tmpint;
-	int value;
+	//int value;
+	int pid = 1;
 	pid_t cpid;
 	list<Prozess*> execprozesse;
 	list<Prozess*> blockedprozesse;
@@ -125,21 +138,27 @@ int main(int argc, char** argv) {
 				tmp = execprozesse.front()->anweisungen.front();
 				cout<< tmp <<endl;
 				execprozesse.front()->anweisungen.pop_front();
+				cout <<"pid " << execprozesse.front()->pid<<endl;
+				cout <<"ppid "  <<execprozesse.front()->ppid<<endl;
+				cout <<"runTime "<<execprozesse.front()->timeUsed<<endl;
+				cout <<"startTime "<<execprozesse.front()->startTime<<endl;
+				cout <<"Priority "<<execprozesse.front()->priority<<endl;
+				execprozesse.front()->timeUsed++;
 				switch(tmp[0]){
 				case 'S': tmp.erase(0,2);
 				tmpint = stoi(tmp);
-				value = tmpint;
-				cout<<"TestAusgabeValue "<< value<< endl;
+				execprozesse.front()->value= tmpint;
+				cout<<"TestAusgabeValue "<< execprozesse.front()->value<< endl;
 				break;
 				case 'A': tmp.erase(0,2);
 				tmpint = stoi(tmp);
-				value = value + tmpint;
-				cout<<"TestAusgabeValue "<< value<< endl;
+				execprozesse.front()->value += tmpint;
+				cout<<"TestAusgabeValue "<< execprozesse.front()->value << endl;
 				break;
 				case 'D': tmp.erase(0,2);
 				tmpint = stoi(tmp);
-				value = value - tmpint;
-				cout<<"TestAusgabeValue "<< value<< endl;
+				execprozesse.front()->value -= tmpint;
+				cout<<"TestAusgabeValue "<< execprozesse.front()->value<< endl;
 				break;
 				case 'B': /*blockedprozesse.push_back(new Prozess(execprozesse);
 				execprozesse.pop_front();*/
@@ -157,7 +176,9 @@ int main(int argc, char** argv) {
 				file.push_back(buff);
 				cout << buff <<endl; }
 				
-				execprozesse.push_back(new Prozess(file));
+				
+				execprozesse.push_back(new Prozess(file, steps, execprozesse.front()->pid, pid));
+				pid++;
 				cout<<"SIZE "<<execprozesse.size()<<endl;
 				cout<<"File.Size"<< file.size()<<endl;
 				file.clear();
@@ -177,7 +198,9 @@ int main(int argc, char** argv) {
 				getline(input, buff);
 				file.push_back(buff);
 				cout << buff <<endl; }
-				execprozesse.push_back(new Prozess(file));
+				
+				execprozesse.push_back(new Prozess(file, steps, 0, pid));
+				pid++;
 				cout<<"SIZE"<<execprozesse.size()<<endl;
 				file.clear();
 				cout<<"File.Size"<< file.size()<<endl;
