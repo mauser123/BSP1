@@ -1,63 +1,72 @@
+/*
+        demo-udp-03: udp-recv: a simple udp server
+	receive udp messages
 
-     #include <netinet/in.h>
-       #include <stdio.h>
-       #include <sys/types.h>
-       #include <sys/socket.h>
-       #include <netdb.h>
-	#include <stdlib.h>
-	#include <strings.h>
-	#include <unistd.h>
-     
-    
-    
-      void error(char *msg)
-      {
-        perror(msg);
-        exit(1);
-       }
-    
-      int main(int argc, char *argv[])
-      {
-       int sock, length, fromlen, n;
-	struct sockaddr_in server;
-	struct sockaddr_in from;
-	char buf[1024];
-	
-	if(argc < 2 )
-{	fprintf(stderr, "ERROR, no port provided\n");
+        usage:  udp-recv
 
+        Paul Krzyzanowski
+*/
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include "port.h"
+
+#define BUFSIZE 2048
+
+int
+main(int argc, char **argv)
+{
+	struct sockaddr_in myaddr;	/* our address */
+	struct sockaddr_in remaddr;	/* remote address */
+	socklen_t addrlen = sizeof(remaddr);		/* length of addresses */
+	int recvlen;			/* # bytes received */
+	int fd;				/* our socket */
+	int msgcnt = 0;			/* count # of messages we received */
+	unsigned char buf[BUFSIZE];	/* receive buffer */
+
+
+	/* create a UDP socket */
+
+	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		perror("cannot create socket\n");
+		return 0;
+	}
+
+	/* bind the socket to any valid IP address and a specific port */
+
+	memset((char *)&myaddr, 0, sizeof(myaddr));
+	myaddr.sin_family = AF_INET;
+	myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	myaddr.sin_port = htons(SERVICE_PORT);
+
+	if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
+		perror("bind failed");
+		return 0;
+	}
+
+	/* now loop, receiving data and printing what we received */
+	for (;;) {
+		printf("waiting on port %d\n", SERVICE_PORT);
+		recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
+		struct sockaddr_in *sin = (struct sockaddr *)&remaddr;	// getting sender IP adress
+		if (recvlen > 0) {
+			buf[recvlen] = 0;
+			unsigned char *ip = (unsigned char *)&sin->sin_addr.s_addr;
+			printf("MSG from!%d.%d.%d.%d ", ip[0], ip[1], ip[2], ip[3]);
+			printf("cotains: \"%s\" (%d bytes)\n", buf, recvlen);
+		}
+		else
+			printf("uh oh - something went wrong!\n");
+		sprintf(buf, "ack %d", msgcnt++);
+		printf("sending response \"%s\"\n", buf);
+		//printf("Adresse: %d\n",(struct sockaddr *)&remaddr); 
+		if (sendto(fd, buf, strlen(buf), 0, (struct sockaddr *)&remaddr, addrlen) < 0)
+			perror("sendto");
+	}
+	/* never exits */
 }
-	sock=socket(AF_INET, SOCK_DGRAM, 0);
-	if(sock < 0)
-	{
-	error("opening socket");
-	}
-	length = sizeof(server);
-	bzero(&server,length);
-	server.sin_family=AF_INET;
-	server.sin_addr.s_addr=INADDR_ANY;
-	fprintf (s.getsocketname()[0]);
-	server.sin_port=htons(atoi(argv[1]));
-	if (bind(sock,(struct sockaddr *)&server,length)<0)
-	{
-	error("binding");
-	}
-	fromlen = sizeof(struct sockaddr_in);
-	while(1)
-	{
-	n = recvfrom(sock, buf, 1024,0,(struct sockaddr *)&from, &fromlen);
-	if(n<0)
-	{
-	error("recvfrom");
 
-	}
-	write(1,"Recived a datagram: ",21);
-	write(1,buf,n);
-	n = sendto(sock,"Got your message\n",17,0,(struct sockaddr *)&from, fromlen);
-	if(n <0)
-	{		
-	error("sendto");
-	}
-	}	
-
-     }
